@@ -1,23 +1,21 @@
 package goscript
 
 import (
-	"errors"
+	"io/ioutil"
 	"os/exec"
-	"path/filepath"
-	"runtime"
 )
 
-// Run executes a "hello" bash script located alongside this file
-// the script location is determined dynamically at runtime.
+// Run writes a "hello" script to a temp file and executes it
 func Run() (string, error) {
-	_, filename, _, ok := runtime.Caller(1)
-	if !ok {
-		return "", errors.New("cannot determine location of hello script")
+	f, err := ioutil.TempFile("", "hello")
+	if err != nil {
+		panic(err)
 	}
-
-	scriptPath := filepath.Join(filename, "..", "hello")
-
-	cmd := exec.Command("/bin/sh", scriptPath)
+	_, err = f.WriteString(script)
+	if err != nil {
+		panic(err)
+	}
+	cmd := exec.Command("/bin/sh", f.Name())
 
 	stdout, err := cmd.Output()
 	if err != nil {
@@ -26,3 +24,8 @@ func Run() (string, error) {
 
 	return string(stdout), nil
 }
+
+const script = `
+#!/bin/bash
+echo "hello_world"
+`
